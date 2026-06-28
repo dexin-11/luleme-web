@@ -49,36 +49,30 @@ function setLastSha(sha: string) {
   localStorage.setItem(LAST_SHA_KEY, sha)
 }
 
-async function githubFetch(config: GitHubConfig, url: string, init?: RequestInit) {
-  return fetch(url, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${config.token}`,
-      Accept: 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
-  })
-}
-
 export async function fetchFromGitHub(): Promise<{ records: Record[]; sha: string } | null> {
   const config = getGitHubConfig()
   if (!config) return null
 
   try {
-    const url = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?ref=${config.branch}`
-    const res = await githubFetch(config, url)
-
-    if (res.status === 404) {
-      return { records: [], sha: '' }
-    }
+    const res = await fetch('/api/github', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'fetch',
+        token: config.token,
+        owner: config.owner,
+        repo: config.repo,
+        path: config.path,
+        branch: config.branch,
+      }),
+    })
 
     if (!res.ok) return null
 
     const data = await res.json()
-    const content = atob(data.content.replace(/\n/g, ''))
-    const records: Record[] = JSON.parse(content)
-    return { records, sha: data.sha }
+    if (data.error) return null
+
+    return { records: data.records, sha: data.sha }
   } catch {
     return null
   }
@@ -89,36 +83,31 @@ export async function pushToGitHub(records: Record[]): Promise<boolean> {
   if (!config) return false
 
   try {
-    const getUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?ref=${config.branch}`
-    const getRes = await githubFetch(config, getUrl)
-
-    let sha: string | undefined
-    if (getRes.ok) {
-      const existing = await getRes.json()
-      sha = existing.sha
-    }
-
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(records, null, 2))))
-    const putUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`
 
-    const putRes = await githubFetch(config, putUrl, {
-      method: 'PUT',
+    const res = await fetch('/api/github', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: `update records [${new Date().toISOString().slice(0, 10)}]`,
-        content,
-        sha,
+        action: 'push',
+        token: config.token,
+        owner: config.owner,
+        repo: config.repo,
+        path: config.path,
         branch: config.branch,
+        content,
+        sha: getLastSha(),
       }),
     })
 
-    if (putRes.ok) {
-      const result = await putRes.json()
-      if (result.content?.sha) setLastSha(result.content.sha)
-      setCache(records)
-      return true
-    }
+    if (!res.ok) return false
 
-    return false
+    const data = await res.json()
+    if (data.error) return false
+
+    if (data.sha) setLastSha(data.sha)
+    setCache(records)
+    return true
   } catch {
     return false
   }
