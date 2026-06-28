@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import HomeScreen from './HomeScreen'
 import StatisticsScreen from './StatisticsScreen'
 import SettingsScreen from './SettingsScreen'
@@ -20,88 +20,143 @@ function SvgIcon({ path, className, style }: { path: string; className?: string;
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('home')
+  const [activeTab, setActiveTab] = useState<TabType>('stats')
   const { theme, resolved, setTheme } = useTheme()
+  const [toast, setToast] = useState<string | null>(null)
+
+  const revealedRef = useRef(false)
+  const [revealed, setRevealedState] = useState(() => {
+    try {
+      const val = localStorage.getItem('luleme_revealed') === '1'
+      revealedRef.current = val
+      if (val) return val
+    } catch {}
+    return false
+  })
+
+  const setRevealed = (val: boolean) => {
+    setRevealedState(val)
+    revealedRef.current = val
+    try { localStorage.setItem('luleme_revealed', val ? '1' : '0') } catch {}
+  }
+
+  const titleTapsRef = useRef({ count: 0, lastTime: 0 })
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2200)
+  }
+
+  const handleTitleTap = useCallback(() => {
+    const now = Date.now()
+    const prev = titleTapsRef.current
+    if (now - prev.lastTime > 2000) {
+      titleTapsRef.current = { count: 1, lastTime: now }
+      return
+    }
+    if (prev.count + 1 >= 5) {
+      const next = !revealedRef.current
+      setRevealed(next)
+      if (!next) setActiveTab('stats')
+      showToast(next ? '🎉 已解锁完整功能' : '🔒 已隐藏')
+      titleTapsRef.current = { count: 0, lastTime: 0 }
+      return
+    }
+    titleTapsRef.current = { count: prev.count + 1, lastTime: now }
+  }, [])
 
   return (
     <div className="min-h-dvh flex flex-col" style={{ background: 'var(--bg)' }}>
-      <div className="flex-1 overflow-y-auto pb-28 mx-auto w-full" style={{ maxWidth: '540px' }}>
-        {activeTab === 'home' && <HomeScreen />}
-        {activeTab === 'stats' && <StatisticsScreen />}
-        {activeTab === 'settings' && <SettingsScreen theme={theme} resolved={resolved} onThemeChange={setTheme} />}
+      <div
+        className="flex-1 overflow-y-auto mx-auto w-full"
+        style={{ maxWidth: '540px', paddingBottom: revealed ? '112px' : '20px' }}
+      >
+        {revealed ? (
+          <>
+            {activeTab === 'home' && <HomeScreen />}
+            {activeTab === 'stats' && <StatisticsScreen onTitleTap={handleTitleTap} />}
+            {activeTab === 'settings' && <SettingsScreen theme={theme} resolved={resolved} onThemeChange={setTheme} />}
+          </>
+        ) : (
+          <StatisticsScreen onTitleTap={handleTitleTap} />
+        )}
       </div>
 
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-40"
-        style={{
-          background: 'var(--bg-nav)',
-          backdropFilter: 'blur(24px) saturate(1.4)',
-          WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
-          borderTop: '1px solid var(--border)',
-          boxShadow: '0 -4px 24px rgba(0,0,0,0.06)',
-        }}
-      >
-        <div className="mx-auto flex items-end" style={{ maxWidth: '540px', padding: '8px 12px 0' }}>
-          {tabs.map(tab => {
-            const isActive = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex flex-col items-center relative cursor-pointer"
-                style={{
-                  padding: '10px 0 12px',
-                  color: isActive ? 'var(--primary)' : 'var(--text-tertiary)',
-                  transition: 'color 0.2s',
-                  background: 'none',
-                  border: 'none',
-                }}
-              >
-                <div
-                  className="flex items-center justify-center"
+      {revealed && (
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-40 animate-slide-up"
+          style={{
+            background: 'var(--bg-nav)',
+            backdropFilter: 'blur(24px) saturate(1.4)',
+            WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
+            borderTop: '1px solid var(--border)',
+            boxShadow: '0 -4px 24px rgba(0,0,0,0.06)',
+          }}
+        >
+          <div className="mx-auto flex items-end" style={{ maxWidth: '540px', padding: '8px 12px 0' }}>
+            {tabs.map(tab => {
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className="flex-1 flex flex-col items-center relative cursor-pointer"
                   style={{
-                    width: '44px',
-                    height: '32px',
-                    borderRadius: '16px',
-                    background: isActive ? 'var(--primary-soft)' : 'transparent',
-                    transition: 'background 0.25s, transform 0.2s',
-                    transform: isActive ? 'scale(1)' : 'scale(0.92)',
-                    marginBottom: '4px',
+                    padding: '10px 0 12px',
+                    color: isActive ? 'var(--primary)' : 'var(--text-tertiary)',
+                    transition: 'color 0.2s',
+                    background: 'none',
+                    border: 'none',
                   }}
                 >
-                  <SvgIcon
-                    path={isActive ? tab.activeIcon : tab.icon}
-                    style={{ transition: 'transform 0.2s', transform: isActive ? 'scale(1.08)' : 'scale(1)' }}
-                  />
-                </div>
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: isActive ? 700 : 500,
-                    letterSpacing: '0.02em',
-                    transition: 'font-weight 0.2s',
-                  }}
-                >
-                  {tab.label}
-                </span>
-                {isActive && (
                   <div
-                    className="absolute -top-1 left-1/2 -translate-x-1/2"
+                    className="flex items-center justify-center"
                     style={{
-                      width: '20px',
-                      height: '3px',
-                      borderRadius: '2px',
-                      background: 'var(--primary)',
-                      opacity: 0.6,
+                      width: '44px',
+                      height: '32px',
+                      borderRadius: '16px',
+                      background: isActive ? 'var(--primary-soft)' : 'transparent',
+                      transition: 'background 0.25s, transform 0.2s',
+                      transform: isActive ? 'scale(1)' : 'scale(0.92)',
+                      marginBottom: '4px',
                     }}
-                  />
-                )}
-              </button>
-            )
-          })}
-        </div>
-        <div className="h-[env(safe-area-inset-bottom)]" />
-      </nav>
+                  >
+                    <SvgIcon
+                      path={isActive ? tab.activeIcon : tab.icon}
+                      style={{ transition: 'transform 0.2s', transform: isActive ? 'scale(1.08)' : 'scale(1)' }}
+                    />
+                  </div>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: isActive ? 700 : 500,
+                      letterSpacing: '0.02em',
+                      transition: 'font-weight 0.2s',
+                    }}
+                  >
+                    {tab.label}
+                  </span>
+                  {isActive && (
+                    <div
+                      className="absolute -top-1 left-1/2 -translate-x-1/2"
+                      style={{
+                        width: '20px',
+                        height: '3px',
+                        borderRadius: '2px',
+                        background: 'var(--primary)',
+                        opacity: 0.6,
+                      }}
+                    />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          <div className="h-[env(safe-area-inset-bottom)]" />
+        </nav>
+      )}
+
+      {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import WeekChart from './WeekChart'
 import MonthHeatmap from './MonthHeatmap'
 import {
@@ -8,12 +8,17 @@ import {
   calculateAverageFrequency,
   getRecordsByDate,
   deleteRecord,
+  addRecord,
 } from '../lib/storage'
 import type { Record } from '../lib/types'
 
 const dayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
-export default function StatisticsScreen() {
+interface Props {
+  onTitleTap?: () => void
+}
+
+export default function StatisticsScreen({ onTitleTap }: Props) {
   const [weekData, setWeekData] = useState<{ day: string; count: number }[]>([])
   const [monthData, setMonthData] = useState<Map<string, number>>(new Map())
   const [visibleMonth, setVisibleMonth] = useState(() => {
@@ -25,6 +30,17 @@ export default function StatisticsScreen() {
   const [avgFreq, setAvgFreq] = useState(0)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedRecords, setSelectedRecords] = useState<Record[]>([])
+  const [toast, setToast] = useState<string | null>(null)
+  const [plusOneVisible, setPlusOneVisible] = useState(false)
+  const [titlePulse, setTitlePulse] = useState(false)
+
+  const totalTapsRef = useRef({ count: 0, lastTime: 0 })
+  const plusOneTimerRef = useRef(0)
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2200)
+  }
 
   const refresh = useCallback(() => {
     const now = new Date()
@@ -77,14 +93,81 @@ export default function StatisticsScreen() {
     refresh()
   }
 
+  const handleTitleClick = useCallback(() => {
+    setTitlePulse(true)
+    setTimeout(() => setTitlePulse(false), 150)
+    onTitleTap?.()
+  }, [onTitleTap])
+
+  const handleTotalTap = useCallback(async () => {
+    const now = Date.now()
+    const prev = totalTapsRef.current
+    if (now - prev.lastTime > 2000) {
+      totalTapsRef.current = { count: 1, lastTime: now }
+      return
+    }
+    if (prev.count + 1 >= 3) {
+      await addRecord()
+      refresh()
+      setPlusOneVisible(true)
+      clearTimeout(plusOneTimerRef.current)
+      plusOneTimerRef.current = window.setTimeout(() => setPlusOneVisible(false), 800)
+      showToast('✨ +1')
+      totalTapsRef.current = { count: 0, lastTime: 0 }
+      return
+    }
+    totalTapsRef.current = { count: prev.count + 1, lastTime: now }
+  }, [refresh])
+
   return (
     <div className="animate-fade-in" style={{ padding: '40px 20px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text)', textAlign: 'center', letterSpacing: '-0.02em' }}>
+      <h2
+        onClick={handleTitleClick}
+        style={{
+          fontSize: '22px',
+          fontWeight: 800,
+          color: 'var(--text)',
+          textAlign: 'center',
+          letterSpacing: '-0.02em',
+          cursor: 'pointer',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          transform: titlePulse ? 'scale(0.95)' : 'scale(1)',
+          transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
         📈 数据统计
       </h2>
 
       <div className="grid grid-cols-3" style={{ gap: '10px' }}>
-        <StatCard label="总计" value={totalCount} suffix="次" icon="🏆" />
+        <div style={{ position: 'relative' }}>
+          <StatCard
+            label="总计"
+            value={totalCount}
+            suffix="次"
+            icon="🏆"
+            onClick={handleTotalTap}
+          />
+          {plusOneVisible && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '40%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                fontSize: '22px',
+                fontWeight: 800,
+                color: 'var(--primary)',
+                pointerEvents: 'none',
+                animation: 'float-up 0.8s ease-out forwards',
+                zIndex: 10,
+                textShadow: '0 0 12px var(--primary-glow)',
+              }}
+            >
+              +1
+            </div>
+          )}
+        </div>
         <StatCard label="最长连续" value={maxStreak} suffix="天" icon="🔥" />
         <StatCard label="周均" value={Math.round(avgFreq * 10) / 10} suffix="次" icon="📊" />
       </div>
@@ -182,13 +265,39 @@ export default function StatisticsScreen() {
           )}
         </div>
       )}
+
+      {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }
 
-function StatCard({ label, value, suffix, icon }: { label: string; value: number; suffix: string; icon: string }) {
+function StatCard({ label, value, suffix, icon, onClick }: {
+  label: string; value: number; suffix: string; icon: string; onClick?: () => void
+}) {
+  const [pulse, setPulse] = useState(false)
+
+  const handleClick = () => {
+    if (onClick) {
+      setPulse(true)
+      setTimeout(() => setPulse(false), 150)
+      onClick()
+    }
+  }
+
   return (
-    <div className="card" style={{ padding: '16px 12px', textAlign: 'center' }}>
+    <div
+      className="card"
+      onClick={handleClick}
+      style={{
+        padding: '16px 12px',
+        textAlign: 'center',
+        cursor: onClick ? 'pointer' : 'default',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        transform: pulse ? 'scale(0.92)' : 'scale(1)',
+        transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
+    >
       <div style={{ fontSize: '18px', marginBottom: '6px' }}>{icon}</div>
       <div className="flex items-baseline justify-center" style={{ gap: '2px' }}>
         <span
