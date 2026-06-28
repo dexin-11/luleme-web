@@ -5,15 +5,8 @@ import {
   clearAll,
   initRecords,
 } from '../lib/storage'
-import {
-  getGitHubConfig,
-  saveGitHubConfig,
-  clearGitHubConfig,
-  isGitHubConfigured,
-  fetchFromGitHub,
-} from '../lib/github'
+import { checkGitHubStatus, isGitHubConfigured } from '../lib/github'
 import type { Theme } from '../lib/useTheme'
-import type { GitHubConfig } from '../lib/types'
 
 interface Props {
   theme: Theme
@@ -31,14 +24,10 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
   const [toast, setToast] = useState<string | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const [ghConfig, setGhConfig] = useState<GitHubConfig>({ token: '', owner: '', repo: '', path: 'luleme-data.json', branch: 'main' })
-  const [ghStatus, setGhStatus] = useState<'idle' | 'testing' | 'ok' | 'error'>('idle')
-  const [ghErrorMsg, setGhErrorMsg] = useState('')
+  const [githubOk, setGithubOk] = useState(false)
 
   useEffect(() => {
-    const saved = getGitHubConfig()
-    if (saved) setGhConfig(saved)
+    checkGitHubStatus().then(setGithubOk)
   }, [])
 
   const showToast = (msg: string) => {
@@ -76,39 +65,11 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
     showToast('数据已清除')
   }
 
-  const handleTestGitHub = async () => {
-    if (!ghConfig.token || !ghConfig.owner || !ghConfig.repo || !ghConfig.path) {
-      setGhStatus('error')
-      setGhErrorMsg('请填写所有必填字段')
-      return
-    }
-    setGhStatus('testing')
-    setGhErrorMsg('')
-    saveGitHubConfig(ghConfig)
-    const result = await fetchFromGitHub()
-    if (result !== null) {
-      setGhStatus('ok')
-      await initRecords()
-      showToast('GitHub 连接成功 ✨')
-    } else {
-      setGhStatus('error')
-      setGhErrorMsg('连接失败，请检查 Token 和仓库信息')
-    }
+  const handleRefreshStatus = async () => {
+    const ok = await checkGitHubStatus()
+    setGithubOk(ok)
+    showToast(ok ? 'GitHub 已连接' : 'GitHub 未配置')
   }
-
-  const handleDisconnectGitHub = () => {
-    clearGitHubConfig()
-    setGhConfig({ token: '', owner: '', repo: '', path: 'luleme-data.json', branch: 'main' })
-    setGhStatus('idle')
-    showToast('已断开 GitHub 连接')
-  }
-
-  const updateGhField = (field: keyof GitHubConfig, value: string) => {
-    setGhConfig(prev => ({ ...prev, [field]: value }))
-    setGhStatus('idle')
-  }
-
-  const connected = isGitHubConfigured()
 
   return (
     <div className="animate-fade-in" style={{ padding: '40px 20px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -148,108 +109,41 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
           <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             GitHub 存储
           </h3>
-          {connected && (
-            <span
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: 'var(--success)',
-                background: 'var(--success-soft)',
-                padding: '4px 12px',
-                borderRadius: '100px',
-              }}
-            >
-              ● 已连接
-            </span>
-          )}
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              color: githubOk ? 'var(--success)' : 'var(--text-tertiary)',
+              background: githubOk ? 'var(--success-soft)' : 'var(--border)',
+              padding: '4px 12px',
+              borderRadius: '100px',
+            }}
+          >
+            {githubOk ? '● 已连接' : '○ 未配置'}
+          </span>
         </div>
         <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '16px', lineHeight: 1.7, fontWeight: 500 }}>
-          配置 GitHub 仓库后，数据将自动同步到仓库中的 JSON 文件。未配置时使用浏览器本地存储。
+          GitHub 同步通过环境变量配置，在 Cloudflare Pages 后台设置以下变量即可启用：
         </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
-              Personal Access Token
-            </label>
-            <input
-              type="password"
-              value={ghConfig.token}
-              onChange={e => updateGhField('token', e.target.value)}
-              placeholder="ghp_xxxxxxxxxxxx"
-              className="input"
-            />
-          </div>
-          <div className="grid grid-cols-2" style={{ gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
-                Owner
-              </label>
-              <input
-                type="text"
-                value={ghConfig.owner}
-                onChange={e => updateGhField('owner', e.target.value)}
-                placeholder="用户名"
-                className="input"
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
-                Repo
-              </label>
-              <input
-                type="text"
-                value={ghConfig.repo}
-                onChange={e => updateGhField('repo', e.target.value)}
-                placeholder="仓库名"
-                className="input"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2" style={{ gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
-                文件路径
-              </label>
-              <input
-                type="text"
-                value={ghConfig.path}
-                onChange={e => updateGhField('path', e.target.value)}
-                placeholder="data/records.json"
-                className="input"
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
-                分支
-              </label>
-              <input
-                type="text"
-                value={ghConfig.branch}
-                onChange={e => updateGhField('branch', e.target.value)}
-                placeholder="main"
-                className="input"
-              />
-            </div>
-          </div>
-
-          {ghStatus === 'error' && (
-            <div style={{ fontSize: '12px', color: 'var(--danger)', padding: '10px 14px', background: 'var(--danger-soft)', borderRadius: '14px', fontWeight: 500 }}>
-              {ghErrorMsg}
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button onClick={handleTestGitHub} className="btn btn-primary flex-1" style={{ padding: '12px', fontSize: '13px' }}>
-              {ghStatus === 'testing' ? '测试中…' : connected ? '重新连接' : '测试并保存'}
-            </button>
-            {connected && (
-              <button onClick={handleDisconnectGitHub} className="btn btn-outline" style={{ padding: '12px 18px', fontSize: '13px' }}>
-                断开
-              </button>
-            )}
-          </div>
+        <div style={{
+          background: 'var(--bg-secondary)',
+          borderRadius: '12px',
+          padding: '14px',
+          marginBottom: '16px',
+          fontSize: '12px',
+          fontFamily: 'monospace',
+          color: 'var(--text-secondary)',
+          lineHeight: 2,
+        }}>
+          <div>GITHUB_TOKEN</div>
+          <div>GITHUB_OWNER</div>
+          <div>GITHUB_REPO</div>
+          <div>GITHUB_PATH</div>
+          <div>GITHUB_BRANCH</div>
         </div>
+        <button onClick={handleRefreshStatus} className="btn btn-outline w-full" style={{ padding: '12px', fontSize: '13px' }}>
+          刷新连接状态
+        </button>
       </div>
 
       <div className="card" style={{ padding: '22px 20px' }}>

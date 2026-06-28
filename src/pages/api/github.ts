@@ -2,6 +2,14 @@ import type { APIRoute } from 'astro'
 
 export const prerender = false
 
+interface Env {
+  GITHUB_TOKEN: string
+  GITHUB_OWNER: string
+  GITHUB_REPO: string
+  GITHUB_PATH: string
+  GITHUB_BRANCH?: string
+}
+
 async function githubFetch(token: string, url: string, init?: RequestInit) {
   return fetch(url, {
     ...init,
@@ -15,22 +23,29 @@ async function githubFetch(token: string, url: string, init?: RequestInit) {
   })
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    const body = await request.json()
-    const { action, token, owner, repo, path, branch, content, sha } = body
+    const env = (locals as any).runtime?.env as Env | undefined
+    const token = env?.GITHUB_TOKEN
+    const owner = env?.GITHUB_OWNER
+    const repo = env?.GITHUB_REPO
+    const path = env?.GITHUB_PATH
+    const branch = env?.GITHUB_BRANCH || 'main'
 
     if (!token || !owner || !repo || !path) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
-        status: 400,
+      return new Response(JSON.stringify({ error: 'GitHub environment variables not configured' }), {
+        status: 500,
         headers: { 'Content-Type': 'application/json' },
       })
     }
 
+    const body = await request.json()
+    const { action, content, sha } = body
+
     const baseUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`
 
     if (action === 'fetch') {
-      const url = `${baseUrl}?ref=${branch || 'main'}`
+      const url = `${baseUrl}?ref=${branch}`
       const res = await githubFetch(token, url)
 
       if (res.status === 404) {
@@ -67,7 +82,7 @@ export const POST: APIRoute = async ({ request }) => {
 
       let existingSha = sha
       if (!existingSha) {
-        const getUrl = `${baseUrl}?ref=${branch || 'main'}`
+        const getUrl = `${baseUrl}?ref=${branch}`
         const getRes = await githubFetch(token, getUrl)
         if (getRes.ok) {
           const existing = await getRes.json()
@@ -81,7 +96,7 @@ export const POST: APIRoute = async ({ request }) => {
           message: `update records [${new Date().toISOString().slice(0, 10)}]`,
           content,
           sha: existingSha,
-          branch: branch || 'main',
+          branch,
         }),
       })
 
@@ -95,6 +110,13 @@ export const POST: APIRoute = async ({ request }) => {
 
       const result = await putRes.json()
       return new Response(JSON.stringify({ sha: result.content?.sha }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (action === 'status') {
+      return new Response(JSON.stringify({ configured: true, owner, repo, path, branch }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       })

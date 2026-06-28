@@ -1,31 +1,9 @@
-import type { Record, GitHubConfig } from './types'
+import type { Record } from './types'
 
-const CONFIG_KEY = 'luleme_github_config'
 const CACHE_KEY = 'luleme_records_cache'
 const LAST_SHA_KEY = 'luleme_last_sha'
 
-export function getGitHubConfig(): GitHubConfig | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const data = localStorage.getItem(CONFIG_KEY)
-    return data ? JSON.parse(data) : null
-  } catch {
-    return null
-  }
-}
-
-export function saveGitHubConfig(config: GitHubConfig) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(config))
-}
-
-export function clearGitHubConfig() {
-  localStorage.removeItem(CONFIG_KEY)
-}
-
-export function isGitHubConfigured(): boolean {
-  const c = getGitHubConfig()
-  return !!(c?.token && c?.owner && c?.repo && c?.path)
-}
+let githubAvailable: boolean | null = null
 
 function getCache(): Record[] {
   if (typeof window === 'undefined') return []
@@ -49,22 +27,33 @@ function setLastSha(sha: string) {
   localStorage.setItem(LAST_SHA_KEY, sha)
 }
 
-export async function fetchFromGitHub(): Promise<{ records: Record[]; sha: string } | null> {
-  const config = getGitHubConfig()
-  if (!config) return null
-
+export async function checkGitHubStatus(): Promise<boolean> {
   try {
     const res = await fetch('/api/github', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'fetch',
-        token: config.token,
-        owner: config.owner,
-        repo: config.repo,
-        path: config.path,
-        branch: config.branch,
-      }),
+      body: JSON.stringify({ action: 'status' }),
+    })
+    if (!res.ok) return false
+    const data = await res.json()
+    githubAvailable = !!data.configured
+    return githubAvailable
+  } catch {
+    githubAvailable = false
+    return false
+  }
+}
+
+export function isGitHubConfigured(): boolean {
+  return githubAvailable === true
+}
+
+export async function fetchFromGitHub(): Promise<{ records: Record[]; sha: string } | null> {
+  try {
+    const res = await fetch('/api/github', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'fetch' }),
     })
 
     if (!res.ok) return null
@@ -79,9 +68,6 @@ export async function fetchFromGitHub(): Promise<{ records: Record[]; sha: strin
 }
 
 export async function pushToGitHub(records: Record[]): Promise<boolean> {
-  const config = getGitHubConfig()
-  if (!config) return false
-
   try {
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(records, null, 2))))
 
@@ -90,11 +76,6 @@ export async function pushToGitHub(records: Record[]): Promise<boolean> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'push',
-        token: config.token,
-        owner: config.owner,
-        repo: config.repo,
-        path: config.path,
-        branch: config.branch,
         content,
         sha: getLastSha(),
       }),
@@ -114,7 +95,8 @@ export async function pushToGitHub(records: Record[]): Promise<boolean> {
 }
 
 export async function loadRecords(): Promise<Record[]> {
-  if (isGitHubConfigured()) {
+  if (githubAvailable === null) await checkGitHubStatus()
+  if (githubAvailable) {
     const result = await fetchFromGitHub()
     if (result) {
       setCache(result.records)
@@ -127,7 +109,7 @@ export async function loadRecords(): Promise<Record[]> {
 
 export async function saveRecords(records: Record[]): Promise<void> {
   setCache(records)
-  if (isGitHubConfigured()) {
+  if (githubAvailable) {
     await pushToGitHub(records)
   }
 }
