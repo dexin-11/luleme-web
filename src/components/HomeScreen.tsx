@@ -59,7 +59,7 @@ export default function HomeScreen() {
 
   const showToast = (msg: string) => {
     setToast(msg)
-    setTimeout(() => setToast(null), 2000)
+    setTimeout(() => setToast(null), 2200)
   }
 
   const handleRecord = async () => {
@@ -85,17 +85,23 @@ export default function HomeScreen() {
   }
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}>
+    <div className="animate-fade-in" style={{ padding: '40px 20px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}>
       <div className="text-center">
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>撸了么</h1>
-        <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+        <h1 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.3 }}>
+          撸了么
+        </h1>
+        <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '6px', fontWeight: 500, letterSpacing: '0.04em' }}>
           健康记录，科学管理
-          {syncing && <span style={{ marginLeft: '8px', opacity: 0.6 }}>同步中…</span>}
+          {syncing && (
+            <span style={{ marginLeft: '10px', opacity: 0.5, fontSize: '12px' }}>⟳ 同步中…</span>
+          )}
         </p>
       </div>
 
       {loading ? (
-        <div style={{ padding: '60px 0', color: 'var(--text-tertiary)', fontSize: '14px' }}>加载中…</div>
+        <div style={{ padding: '80px 0', color: 'var(--text-tertiary)', fontSize: '14px', fontWeight: 500 }}>
+          加载中…
+        </div>
       ) : (
         <>
           <RecordButton onRecord={handleRecord} todayCount={todayRecords.length} />
@@ -103,12 +109,18 @@ export default function HomeScreen() {
           <button
             onClick={() => setShowBackfill(true)}
             className="btn btn-ghost"
-            style={{ fontSize: '13px', padding: '8px 16px' }}
+            style={{
+              fontSize: '13px',
+              padding: '8px 20px',
+              borderRadius: '100px',
+              fontWeight: 500,
+              letterSpacing: '0.02em',
+            }}
           >
             补录历史记录 →
           </button>
 
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <HealthAdviceCard weekCount={weekCount} />
             <TodayRecords records={todayRecords} onDelete={handleDelete} />
           </div>

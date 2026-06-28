@@ -53,38 +53,44 @@ export default function MonthHeatmap({
   const monthLabel = `${year}年${month + 1}月`
 
   return (
-    <div className="card animate-fade-in" style={{ padding: '20px' }}>
+    <div className="card animate-fade-in" style={{ padding: '20px 22px' }}>
       <div className="flex items-center justify-between" style={{ marginBottom: '16px' }}>
         <button
           onClick={onPrevMonth}
           className="btn btn-ghost"
-          style={{ width: '36px', height: '36px', borderRadius: '10px', padding: 0 }}
+          style={{ width: '36px', height: '36px', borderRadius: '12px', padding: 0, fontSize: '18px', fontWeight: 600 }}
         >
           ‹
         </button>
         <button
           onClick={onCurrentMonth}
           className="btn btn-ghost"
-          style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', padding: '6px 12px' }}
+          style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', padding: '6px 14px', borderRadius: '12px' }}
         >
-          {monthLabel}
+          🗓️ {monthLabel}
         </button>
         <button
           onClick={onNextMonth}
           className="btn btn-ghost"
-          style={{ width: '36px', height: '36px', borderRadius: '10px', padding: 0 }}
+          style={{ width: '36px', height: '36px', borderRadius: '12px', padding: 0, fontSize: '18px', fontWeight: 600 }}
         >
           ›
         </button>
       </div>
 
-      <div className="grid grid-cols-7" style={{ gap: '4px', marginBottom: '6px' }}>
+      <div className="grid grid-cols-7" style={{ gap: '5px', marginBottom: '6px' }}>
         {dayLabels.map(d => (
-          <div key={d} className="text-center" style={{ fontSize: '11px', color: 'var(--text-tertiary)', padding: '4px 0', fontWeight: 500 }}>{d}</div>
+          <div
+            key={d}
+            className="text-center"
+            style={{ fontSize: '11px', color: 'var(--text-tertiary)', padding: '4px 0', fontWeight: 600, letterSpacing: '0.04em' }}
+          >
+            {d}
+          </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7" style={{ gap: '4px' }}>
+      <div className="grid grid-cols-7" style={{ gap: '5px' }}>
         {cells.map((cell, i) => {
           const hasCount = cell.count > 0
           return (
@@ -93,18 +99,20 @@ export default function MonthHeatmap({
               className="flex items-center justify-center"
               style={{
                 aspectRatio: '1',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 fontSize: '11px',
-                fontWeight: cell.isToday ? 700 : 500,
+                fontWeight: cell.isToday ? 800 : 500,
                 background: cell.day === 0 ? 'transparent' : getHeatColor(cell.count),
                 color: cell.isToday ? 'var(--primary)' : hasCount ? 'var(--text)' : 'var(--text-tertiary)',
-                boxShadow: cell.count >= 4 ? '0 0 8px var(--primary-glow)' : 'none',
+                boxShadow: cell.count >= 4 ? '0 0 12px var(--primary-glow)' : 'none',
                 cursor: cell.day > 0 && onSelectDate ? 'pointer' : 'default',
-                transition: 'background 0.15s, box-shadow 0.15s',
+                transition: 'background 0.2s, box-shadow 0.2s, transform 0.15s',
                 outline: cell.isToday ? '2px solid var(--primary)' : 'none',
                 outlineOffset: '-2px',
               }}
               onClick={() => cell.day > 0 && onSelectDate?.(cell.dateStr)}
+              onMouseEnter={e => { if (cell.day > 0) e.currentTarget.style.transform = 'scale(1.08)' }}
+              onMouseLeave={e => { if (cell.day > 0) e.currentTarget.style.transform = 'scale(1)' }}
             >
               {cell.day > 0 ? cell.day : ''}
             </div>
@@ -112,12 +120,20 @@ export default function MonthHeatmap({
         })}
       </div>
 
-      <div className="flex items-center justify-center" style={{ gap: '6px', marginTop: '14px' }}>
-        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>少</span>
+      <div className="flex items-center justify-center" style={{ gap: '8px', marginTop: '16px' }}>
+        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 500 }}>少</span>
         {[0, 1, 2, 3, 4].map(n => (
-          <div key={n} style={{ width: '12px', height: '12px', borderRadius: '3px', background: getHeatColor(n) }} />
+          <div
+            key={n}
+            style={{
+              width: '14px',
+              height: '14px',
+              borderRadius: '4px',
+              background: getHeatColor(n),
+            }}
+          />
         ))}
-        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>多</span>
+        <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 500 }}>多</span>
       </div>
     </div>
   )

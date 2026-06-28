@@ -27,22 +27,33 @@ export default function BackfillModal({ onConfirm, onClose }: Props) {
   return (
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)', marginBottom: '20px' }}>补录记录</h3>
+        <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text)', marginBottom: '6px' }}>📝 补录记录</h3>
+        <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '22px', fontWeight: 500 }}>
+          选择要补录的日期和时间
+        </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', fontWeight: 500 }}>日期</label>
+            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
+              日期
+            </label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} className="input" />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', fontWeight: 500 }}>时间</label>
+            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
+              时间
+            </label>
             <input type="time" value={time} onChange={e => setTime(e.target.value)} className="input" />
           </div>
         </div>
 
-        <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="btn btn-outline flex-1" style={{ padding: '11px' }}>取消</button>
-          <button onClick={handleConfirm} className="btn btn-primary flex-1" style={{ padding: '11px' }}>确认补录</button>
+        <div className="flex gap-3" style={{ marginTop: '24px' }}>
+          <button onClick={onClose} className="btn btn-outline flex-1" style={{ padding: '12px', fontSize: '14px' }}>
+            取消
+          </button>
+          <button onClick={handleConfirm} className="btn btn-primary flex-1" style={{ padding: '12px', fontSize: '14px' }}>
+            确认补录
+          </button>
         </div>
       </div>
     </div>

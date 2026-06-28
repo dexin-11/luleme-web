@@ -43,7 +43,7 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
 
   const showToast = (msg: string) => {
     setToast(msg)
-    setTimeout(() => setToast(null), 2000)
+    setTimeout(() => setToast(null), 2200)
   }
 
   const handleExport = () => {
@@ -89,7 +89,7 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
     if (result !== null) {
       setGhStatus('ok')
       await initRecords()
-      showToast('GitHub 连接成功')
+      showToast('GitHub 连接成功 ✨')
     } else {
       setGhStatus('error')
       setGhErrorMsg('连接失败，请检查 Token 和仓库信息')
@@ -111,11 +111,15 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
   const connected = isGitHubConfigured()
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text)', textAlign: 'center', letterSpacing: '-0.02em' }}>设置</h2>
+    <div className="animate-fade-in" style={{ padding: '40px 20px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text)', textAlign: 'center', letterSpacing: '-0.02em' }}>
+        ⚙️ 设置
+      </h2>
 
-      <div className="card" style={{ padding: '20px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>外观</h3>
+      <div className="card" style={{ padding: '22px 20px' }}>
+        <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          外观
+        </h3>
         <div className="grid grid-cols-3" style={{ gap: '8px' }}>
           {themeOptions.map(opt => (
             <button
@@ -123,42 +127,51 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
               onClick={() => onThemeChange(opt.value)}
               className="flex flex-col items-center cursor-pointer"
               style={{
-                padding: '14px 8px',
-                borderRadius: '14px',
-                border: `1.5px solid ${theme === opt.value ? 'var(--primary)' : 'var(--border)'}`,
+                padding: '16px 8px',
+                borderRadius: '16px',
+                border: `2px solid ${theme === opt.value ? 'var(--primary)' : 'var(--border)'}`,
                 background: theme === opt.value ? 'var(--primary-soft)' : 'transparent',
                 color: theme === opt.value ? 'var(--primary)' : 'var(--text-secondary)',
-                transition: 'all 0.15s',
+                transition: 'all 0.2s',
+                boxShadow: theme === opt.value ? 'var(--shadow-sm)' : 'none',
               }}
             >
-              <span style={{ fontSize: '22px', marginBottom: '6px' }}>{opt.icon}</span>
-              <span style={{ fontSize: '12px', fontWeight: 500 }}>{opt.label}</span>
+              <span style={{ fontSize: '24px', marginBottom: '8px' }}>{opt.icon}</span>
+              <span style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.02em' }}>{opt.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="card" style={{ padding: '20px' }}>
-        <div className="flex items-center justify-between" style={{ marginBottom: '14px' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>GitHub 存储</h3>
+      <div className="card" style={{ padding: '22px 20px' }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            GitHub 存储
+          </h3>
           {connected && (
-            <span style={{
-              fontSize: '11px',
-              fontWeight: 600,
-              color: 'var(--success)',
-              background: 'var(--success-soft)',
-              padding: '3px 10px',
-              borderRadius: '100px',
-            }}>已连接</span>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--success)',
+                background: 'var(--success-soft)',
+                padding: '4px 12px',
+                borderRadius: '100px',
+              }}
+            >
+              ● 已连接
+            </span>
           )}
         </div>
-        <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '14px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '16px', lineHeight: 1.7, fontWeight: 500 }}>
           配置 GitHub 仓库后，数据将自动同步到仓库中的 JSON 文件。未配置时使用浏览器本地存储。
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', fontWeight: 500 }}>Personal Access Token</label>
+            <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
+              Personal Access Token
+            </label>
             <input
               type="password"
               value={ghConfig.token}
@@ -169,7 +182,9 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
           </div>
           <div className="grid grid-cols-2" style={{ gap: '12px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', fontWeight: 500 }}>Owner</label>
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
+                Owner
+              </label>
               <input
                 type="text"
                 value={ghConfig.owner}
@@ -179,7 +194,9 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', fontWeight: 500 }}>Repo</label>
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
+                Repo
+              </label>
               <input
                 type="text"
                 value={ghConfig.repo}
@@ -191,7 +208,9 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
           </div>
           <div className="grid grid-cols-2" style={{ gap: '12px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', fontWeight: 500 }}>文件路径</label>
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
+                文件路径
+              </label>
               <input
                 type="text"
                 value={ghConfig.path}
@@ -201,7 +220,9 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', fontWeight: 500 }}>分支</label>
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px', fontWeight: 600, letterSpacing: '0.04em' }}>
+                分支
+              </label>
               <input
                 type="text"
                 value={ghConfig.branch}
@@ -213,17 +234,17 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
           </div>
 
           {ghStatus === 'error' && (
-            <div style={{ fontSize: '12px', color: 'var(--danger)', padding: '8px 12px', background: 'var(--danger-soft)', borderRadius: '10px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--danger)', padding: '10px 14px', background: 'var(--danger-soft)', borderRadius: '14px', fontWeight: 500 }}>
               {ghErrorMsg}
             </div>
           )}
 
           <div className="flex gap-3">
-            <button onClick={handleTestGitHub} className="btn btn-primary flex-1" style={{ padding: '10px', fontSize: '13px' }}>
+            <button onClick={handleTestGitHub} className="btn btn-primary flex-1" style={{ padding: '12px', fontSize: '13px' }}>
               {ghStatus === 'testing' ? '测试中…' : connected ? '重新连接' : '测试并保存'}
             </button>
             {connected && (
-              <button onClick={handleDisconnectGitHub} className="btn btn-outline" style={{ padding: '10px 16px', fontSize: '13px' }}>
+              <button onClick={handleDisconnectGitHub} className="btn btn-outline" style={{ padding: '12px 18px', fontSize: '13px' }}>
                 断开
               </button>
             )}
@@ -231,8 +252,10 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
         </div>
       </div>
 
-      <div className="card" style={{ padding: '20px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>数据管理</h3>
+      <div className="card" style={{ padding: '22px 20px' }}>
+        <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          数据管理
+        </h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <MenuItem icon="📤" label="导出 JSON" onClick={handleExport} />
           <MenuItem icon="📥" label="导入 JSON" onClick={() => fileInputRef.current?.click()} />
@@ -241,14 +264,16 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
         </div>
       </div>
 
-      <div className="card" style={{ padding: '20px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>关于</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          <p>撸了么 Web v1.1.0</p>
+      <div className="card" style={{ padding: '22px 20px' }}>
+        <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          关于
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7, fontWeight: 500 }}>
+          <p>撸了么 Web v1.2.0</p>
           <p>数据默认存储在浏览器本地，配置 GitHub 后自动同步到仓库。</p>
           <p style={{ color: 'var(--text-tertiary)' }}>
             基于{' '}
-            <a href="https://github.com/sky22333/luleme" target="_blank" rel="noopener" style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+            <a href="https://github.com/sky22333/luleme" target="_blank" rel="noopener" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 600 }}>
               luleme
             </a>
             {' '}项目改编
@@ -259,11 +284,17 @@ export default function SettingsScreen({ theme, resolved, onThemeChange }: Props
       {showConfirm && (
         <div className="overlay" onClick={() => setShowConfirm(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>确认清除</h3>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.6 }}>此操作不可恢复，本地缓存将被清除。如已配置 GitHub，远程数据不受影响。</p>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text)', marginBottom: '8px' }}>⚠️ 确认清除</h3>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.7, fontWeight: 500 }}>
+              此操作不可恢复，本地缓存将被清除。如已配置 GitHub，远程数据不受影响。
+            </p>
             <div className="flex gap-3">
-              <button onClick={() => setShowConfirm(false)} className="btn btn-outline flex-1" style={{ padding: '11px' }}>取消</button>
-              <button onClick={handleClearAll} className="btn flex-1" style={{ padding: '11px', background: 'var(--danger)', color: 'white' }}>确认清除</button>
+              <button onClick={() => setShowConfirm(false)} className="btn btn-outline flex-1" style={{ padding: '12px', fontSize: '14px' }}>
+                取消
+              </button>
+              <button onClick={handleClearAll} className="btn flex-1" style={{ padding: '12px', fontSize: '14px', background: 'var(--danger)', color: 'white', fontWeight: 600 }}>
+                确认清除
+              </button>
             </div>
           </div>
         </div>
@@ -280,20 +311,26 @@ function MenuItem({ icon, label, danger, onClick }: { icon: string; label: strin
       onClick={onClick}
       className="flex items-center justify-between w-full cursor-pointer"
       style={{
-        padding: '12px',
-        borderRadius: '12px',
+        padding: '14px',
+        borderRadius: '14px',
         background: danger ? 'var(--danger-soft)' : 'transparent',
         border: 'none',
-        transition: 'background 0.15s',
+        transition: 'background 0.2s, transform 0.15s',
       }}
-      onMouseEnter={e => (e.currentTarget.style.background = danger ? 'var(--danger-soft)' : 'var(--bg-card-hover)')}
-      onMouseLeave={e => (e.currentTarget.style.background = danger ? 'var(--danger-soft)' : 'transparent')}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = danger ? 'var(--danger-soft)' : 'var(--bg-card-hover)'
+        e.currentTarget.style.transform = 'translateX(2px)'
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = danger ? 'var(--danger-soft)' : 'transparent'
+        e.currentTarget.style.transform = 'translateX(0)'
+      }}
     >
-      <div className="flex items-center" style={{ gap: '12px' }}>
+      <div className="flex items-center" style={{ gap: '14px' }}>
         <span style={{ fontSize: '18px' }}>{icon}</span>
-        <span style={{ fontSize: '14px', fontWeight: 500, color: danger ? 'var(--danger)' : 'var(--text)' }}>{label}</span>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: danger ? 'var(--danger)' : 'var(--text)' }}>{label}</span>
       </div>
-      <span style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>→</span>
+      <span style={{ fontSize: '14px', color: 'var(--text-tertiary)', transition: 'transform 0.2s' }}>→</span>
     </button>
   )
 }

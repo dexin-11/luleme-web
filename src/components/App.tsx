@@ -11,9 +11,9 @@ const tabs: { id: TabType; label: string; icon: string; activeIcon: string }[] =
   { id: 'settings', label: '设置', icon: 'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z', activeIcon: 'M12 8a4 4 0 100 8 4 4 0 000-8z' },
 ]
 
-function SvgIcon({ path, className }: { path: string; className?: string }) {
+function SvgIcon({ path, className, style }: { path: string; className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={style}>
       <path d={path} />
     </svg>
   )
@@ -25,7 +25,7 @@ export default function App() {
 
   return (
     <div className="min-h-dvh flex flex-col" style={{ background: 'var(--bg)' }}>
-      <div className="flex-1 overflow-y-auto pb-24 mx-auto w-full" style={{ maxWidth: '520px' }}>
+      <div className="flex-1 overflow-y-auto pb-28 mx-auto w-full" style={{ maxWidth: '540px' }}>
         {activeTab === 'home' && <HomeScreen />}
         {activeTab === 'stats' && <StatisticsScreen />}
         {activeTab === 'settings' && <SettingsScreen theme={theme} resolved={resolved} onThemeChange={setTheme} />}
@@ -35,38 +35,67 @@ export default function App() {
         className="fixed bottom-0 left-0 right-0 z-40"
         style={{
           background: 'var(--bg-nav)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          backdropFilter: 'blur(24px) saturate(1.4)',
+          WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
           borderTop: '1px solid var(--border)',
+          boxShadow: '0 -4px 24px rgba(0,0,0,0.06)',
         }}
       >
-        <div className="mx-auto flex" style={{ maxWidth: '520px' }}>
+        <div className="mx-auto flex items-end" style={{ maxWidth: '540px', padding: '8px 12px 0' }}>
           {tabs.map(tab => {
             const isActive = activeTab === tab.id
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex flex-col items-center gap-0.5 py-3 relative cursor-pointer"
+                className="flex-1 flex flex-col items-center relative cursor-pointer"
                 style={{
+                  padding: '10px 0 12px',
                   color: isActive ? 'var(--primary)' : 'var(--text-tertiary)',
-                  transition: 'color 0.15s',
+                  transition: 'color 0.2s',
+                  background: 'none',
+                  border: 'none',
                 }}
               >
-                <div className="relative">
+                <div
+                  className="flex items-center justify-center"
+                  style={{
+                    width: '44px',
+                    height: '32px',
+                    borderRadius: '16px',
+                    background: isActive ? 'var(--primary-soft)' : 'transparent',
+                    transition: 'background 0.25s, transform 0.2s',
+                    transform: isActive ? 'scale(1)' : 'scale(0.92)',
+                    marginBottom: '4px',
+                  }}
+                >
                   <SvgIcon
                     path={isActive ? tab.activeIcon : tab.icon}
-                    className="transition-transform duration-200"
-                    style={isActive ? { transform: 'scale(1.1)' } : {}}
+                    style={{ transition: 'transform 0.2s', transform: isActive ? 'scale(1.08)' : 'scale(1)' }}
                   />
-                  {isActive && (
-                    <div
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full"
-                      style={{ background: 'var(--primary)' }}
-                    />
-                  )}
                 </div>
-                <span className="text-xs font-medium mt-1">{tab.label}</span>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: isActive ? 700 : 500,
+                    letterSpacing: '0.02em',
+                    transition: 'font-weight 0.2s',
+                  }}
+                >
+                  {tab.label}
+                </span>
+                {isActive && (
+                  <div
+                    className="absolute -top-1 left-1/2 -translate-x-1/2"
+                    style={{
+                      width: '20px',
+                      height: '3px',
+                      borderRadius: '2px',
+                      background: 'var(--primary)',
+                      opacity: 0.6,
+                    }}
+                  />
+                )}
               </button>
             )
           })}

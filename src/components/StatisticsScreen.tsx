@@ -78,13 +78,15 @@ export default function StatisticsScreen() {
   }
 
   return (
-    <div className="animate-fade-in" style={{ padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text)', textAlign: 'center', letterSpacing: '-0.02em' }}>数据统计</h2>
+    <div className="animate-fade-in" style={{ padding: '40px 20px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text)', textAlign: 'center', letterSpacing: '-0.02em' }}>
+        📈 数据统计
+      </h2>
 
       <div className="grid grid-cols-3" style={{ gap: '10px' }}>
-        <StatCard label="总计" value={totalCount} suffix="次" />
-        <StatCard label="最长连续" value={maxStreak} suffix="天" />
-        <StatCard label="周均" value={Math.round(avgFreq * 10) / 10} suffix="次" />
+        <StatCard label="总计" value={totalCount} suffix="次" icon="🏆" />
+        <StatCard label="最长连续" value={maxStreak} suffix="天" icon="🔥" />
+        <StatCard label="周均" value={Math.round(avgFreq * 10) / 10} suffix="次" icon="📊" />
       </div>
 
       <WeekChart data={weekData} />
@@ -102,13 +104,26 @@ export default function StatisticsScreen() {
       />
 
       {selectedDate && (
-        <div className="card animate-scale-in" style={{ padding: '16px' }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: '12px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{selectedDate}</h3>
-            <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{selectedRecords.length} 条记录</span>
+        <div className="card animate-scale-in" style={{ padding: '18px 20px' }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>📅 {selectedDate}</h3>
+            <span
+              style={{
+                fontSize: '11px',
+                color: 'var(--primary)',
+                background: 'var(--primary-soft)',
+                padding: '3px 10px',
+                borderRadius: '100px',
+                fontWeight: 600,
+              }}
+            >
+              {selectedRecords.length} 条记录
+            </span>
           </div>
           {selectedRecords.length === 0 ? (
-            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', textAlign: 'center', padding: '16px 0' }}>暂无记录</p>
+            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px 0', fontWeight: 500 }}>
+              暂无记录
+            </p>
           ) : (
             <div>
               {[...selectedRecords].sort((a, b) => b.timestamp - a.timestamp).map((r, i) => {
@@ -121,16 +136,16 @@ export default function StatisticsScreen() {
                     className="flex items-center justify-between group"
                     style={{
                       padding: '10px 12px',
-                      borderRadius: '12px',
+                      borderRadius: '14px',
                       marginBottom: i < selectedRecords.length - 1 ? '4px' : 0,
-                      transition: 'background 0.15s',
+                      transition: 'background 0.2s',
                     }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-card-hover)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <div className="flex items-center gap-3">
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)' }} />
-                      <span style={{ fontSize: '14px', color: 'var(--text)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{h}:{m}</span>
+                    <div className="flex items-center" style={{ gap: '12px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 6px var(--primary-glow)' }} />
+                      <span style={{ fontSize: '14px', color: 'var(--text)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>{h}:{m}</span>
                     </div>
                     <button
                       onClick={() => handleDelete(r.id)}
@@ -139,14 +154,23 @@ export default function StatisticsScreen() {
                         fontSize: '12px',
                         color: 'var(--text-tertiary)',
                         opacity: 0,
-                        transition: 'opacity 0.15s, color 0.15s',
-                        padding: '4px 8px',
-                        borderRadius: '8px',
+                        transition: 'opacity 0.2s, color 0.15s, background 0.15s',
+                        padding: '4px 10px',
+                        borderRadius: '100px',
                         background: 'none',
                         border: 'none',
+                        fontWeight: 500,
                       }}
-                      onMouseEnter={e => { e.currentTarget.style.color = 'var(--danger)'; (e.currentTarget as HTMLElement).style.opacity = '1' }}
-                      onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; (e.currentTarget as HTMLElement).style.opacity = '0' }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.color = 'var(--danger)'
+                        e.currentTarget.style.background = 'var(--danger-soft)'
+                        e.currentTarget.style.opacity = '1'
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.color = 'var(--text-tertiary)'
+                        e.currentTarget.style.background = 'none'
+                        e.currentTarget.style.opacity = '0'
+                      }}
                       ref={el => { if (el) el.style.opacity = '0' }}
                     >
                       删除
@@ -162,14 +186,28 @@ export default function StatisticsScreen() {
   )
 }
 
-function StatCard({ label, value, suffix }: { label: string; value: number; suffix: string }) {
+function StatCard({ label, value, suffix, icon }: { label: string; value: number; suffix: string; icon: string }) {
   return (
     <div className="card" style={{ padding: '16px 12px', textAlign: 'center' }}>
+      <div style={{ fontSize: '18px', marginBottom: '6px' }}>{icon}</div>
       <div className="flex items-baseline justify-center" style={{ gap: '2px' }}>
-        <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text)', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
-        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{suffix}</span>
+        <span
+          style={{
+            fontSize: '24px',
+            fontWeight: 800,
+            color: 'var(--text)',
+            lineHeight: 1,
+            fontVariantNumeric: 'tabular-nums',
+            fontFamily: 'var(--font-mono)',
+          }}
+        >
+          {value}
+        </span>
+        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{suffix}</span>
       </div>
-      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '6px', fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '6px', fontWeight: 600, letterSpacing: '0.04em' }}>
+        {label}
+      </div>
     </div>
   )
 }

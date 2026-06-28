@@ -18,20 +18,38 @@ export default function HealthAdviceCard({ weekCount }: Props) {
     <div
       className="card animate-fade-in"
       style={{
-        padding: '16px',
-        borderColor: styles.border + '33',
+        padding: '18px 20px',
+        borderColor: styles.border + '30',
         background: styles.bg,
+        borderRadius: '20px',
       }}
     >
-      <div className="flex items-start gap-3">
-        <span style={{ fontSize: '24px', lineHeight: 1 }}>{advice.icon}</span>
+      <div className="flex items-start gap-4">
+        <div
+          className="flex items-center justify-center"
+          style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '14px',
+            background: styles.border + '18',
+            fontSize: '22px',
+            lineHeight: 1,
+            flexShrink: 0,
+          }}
+        >
+          {advice.icon}
+        </div>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm" style={{ color: styles.text }}>{advice.title}</div>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.6 }}>{advice.message}</p>
-          <div className="flex items-center gap-3 mt-3" style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>
-            <span>建议 3次/周</span>
-            <span style={{ width: '1px', height: '12px', background: 'var(--border)' }} />
-            <span>上限 5次/周</span>
+          <div style={{ fontSize: '14px', fontWeight: 700, color: styles.text, marginBottom: '4px' }}>
+            {advice.title}
+          </div>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>{advice.message}</p>
+          <div
+            className="flex items-center"
+            style={{ gap: '10px', marginTop: '12px', fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}
+          >
+            <span style={{ padding: '3px 10px', borderRadius: '100px', background: styles.border + '15' }}>建议 3次/周</span>
+            <span style={{ padding: '3px 10px', borderRadius: '100px', background: styles.border + '15' }}>上限 5次/周</span>
           </div>
         </div>
       </div>
